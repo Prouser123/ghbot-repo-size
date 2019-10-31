@@ -30,23 +30,34 @@ module.exports = app => {
       sha
     );
 
-    const status = {
-      sha,
-      context: "size/diff",
-      state: "success",
-      description: pretty(head_rs - base_rs, { signed: true })
-    };
+    // Create the checks
+    context.github.checks.create({
+      owner: params.owner,
+      repo: params.repo,
+      name: "size/diff",
+      head_sha: sha,
+      status: "completed",
+      conclusion: "neutral",
+      output: {
+        title: `[${pretty(head_rs - base_rs, { signed: true })}]`,
+        summary:
+          "This is the difference in file size between the HEAD of this branch and the base branch. (the one you are merging into)"
+      }
+    });
 
-    const status2 = {
-      sha,
-      context: "size/size",
-      state: "success",
-      description: `${pretty(head_rs)} (was ${pretty(base_rs)})`
-    };
-
-    // Create the status
-    context.github.repos.createStatus(context.repo(status));
-    context.github.repos.createStatus(context.repo(status2));
+    context.github.checks.create({
+      owner: params.owner,
+      repo: params.repo,
+      name: "size/size",
+      head_sha: sha,
+      status: "completed",
+      conclusion: "neutral",
+      output: {
+        title: `${pretty(head_rs)} (was ${pretty(base_rs)})`,
+        summary:
+          "This is the new file size of your repository after this commit."
+      }
+    });
     return;
   });
 };
